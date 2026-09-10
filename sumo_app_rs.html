@@ -419,7 +419,7 @@ function getRikishiData(nameOrEn) {
 
   // 2. 英語名を日本語名に変換して検索
   const cleanEn = normalizeName(nameOrEn);
-  const jpName = EN_TO_JP_RIKLISHI[cleanEn];
+  const jpName = EN_TO_JP_RIKISHI[cleanEn];
 
   if (jpName && globalRikishiMaster[jpName]) {
     return {

@@ -1,4 +1,4 @@
-EN_TO_JP_RIKLISHI  
+EN_TO_JP_RIKISHI  
 
 
 "hoshoryu": "豊昇龍", "onosato": "大の里", "kotozakura": "琴櫻",
