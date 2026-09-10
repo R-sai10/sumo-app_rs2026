@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Sumo API テスト</title>
+</head>
+<body>
+    <h1>API取得テスト（2026年7月場所 初日）</h1>
+    <button onclick="testFetch()">データ取得開始</button>
+    <pre id="output" style="background:#f0f0f0; padding:15px; text-align:left; max-height: 500px; overflow: auto;"></pre>
+
+    <script>
+        async function testFetch() {
+            const output = document.getElementById('output');
+            output.textContent = "取得中...";
+
+            // 2026年7月場所 初日の取組一覧を取得
+            const url = "https://www.sumo-api.com/api/basho/202607/torikumi/Makuuchi/1";
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTPエラー! ステータス: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                // 取得したデータを画面に綺麗に表示
+                output.textContent = JSON.stringify(data, null, 2);
+                console.log("取得データ:", data);
+            } catch (error) {
+                output.textContent = "エラーが発生しました: " + error.message;
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>

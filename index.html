@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大相撲 7月場所総括 ＆ 9月場所注目力士クイズ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@600;900&family=Noto+Sans+JP:wght@400;700&display=swap');
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #f7f4ed;
+        }
+        .serif {
+            font-family: 'Noto Serif JP', serif;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-red-800 text-amber-100 py-4 px-6 text-center shadow-lg border-b-4 border-amber-500">
+        <h1 class="text-xl md:text-2xl font-black serif tracking-wider">大相撲クイズ</h1>
+        <p class="text-xs md:text-sm mt-1 opacity-90">7月場所総括 ＆ 9月場所の注目力士 (全10問)</p>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow container mx-auto px-4 py-6 max-w-md flex flex-col justify-center">
+
+        <!-- Start Card -->
+        <div id="start-card" class="bg-white rounded-2xl shadow-xl p-6 text-center border border-amber-200">
+            <div class="text-5xl mb-4">🥋</div>
+            <h2 class="text-xl font-bold text-red-900 mb-2 serif">相撲通に挑戦！</h2>
+            <p class="text-sm text-gray-600 mb-6 leading-relaxed">
+                激闘の7月（名古屋）場所の振り返りと、9月（秋）場所の注目ポイントをクイズでおさらいしましょう！<br>
+                全10問に挑戦！
+            </p>
+            <button onclick="startQuiz()" class="w-full py-3 bg-red-700 hover:bg-red-800 text-white font-bold rounded-xl shadow-md transition duration-200 transform active:scale-95">
+                クイズを始める
+            </button>
+        </div>
+
+        <!-- Quiz Card -->
+        <div id="quiz-card" class="hidden bg-white rounded-2xl shadow-xl p-6 border border-amber-200">
+            <!-- Progress & Tag -->
+            <div class="flex justify-between items-center mb-4 text-xs font-semibold">
+                <span id="question-number" class="text-red-700 bg-red-100 px-2.5 py-1 rounded-full">第 1 問 / 10 問</span>
+                <span id="question-tag" class="text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">カテゴリ</span>
+            </div>
+
+            <!-- Question Text -->
+            <h3 id="question-text" class="text-base font-bold text-gray-900 mb-5 leading-snug">
+                質問テキスト
+            </h3>
+
+            <!-- Options -->
+            <div id="options-container" class="space-y-2.5">
+                <!-- Option buttons generated via JS -->
+            </div>
+
+            <!-- Explanation Area (Hidden initially) -->
+            <div id="explanation-box" class="hidden mt-5 p-4 rounded-xl text-sm border">
+                <p id="explanation-result" class="font-bold text-base mb-1"></p>
+                <div class="text-xs font-semibold text-gray-500 mb-1">【正解】<span id="correct-answer-text" class="text-gray-800 font-bold"></span></div>
+                <p id="explanation-text" class="text-gray-700 leading-relaxed text-xs md:text-sm mt-2"></p>
+                <button onclick="nextQuestion()" class="mt-4 w-full py-2.5 bg-gray-800 hover:bg-gray-900 text-white font-bold rounded-lg text-xs shadow transition">
+                    次の問題へ ➔
+                </button>
+            </div>
+        </div>
+
+        <!-- Result Card -->
+        <div id="result-card" class="hidden bg-white rounded-2xl shadow-xl p-6 text-center border border-amber-200">
+            <div class="text-5xl mb-3">🏆</div>
+            <h2 class="text-xl font-bold text-gray-800 mb-1 serif">結果発表</h2>
+            <p class="text-sm text-gray-500 mb-4">あなたの相撲知力スコア</p>
+
+            <div class="bg-amber-50 rounded-xl p-4 mb-6 border border-amber-200">
+                <span id="score-text" class="text-4xl font-black text-red-700">0</span>
+                <span class="text-lg font-bold text-gray-600"> / 10 問正解</span>
+                <p id="rank-text" class="mt-2 text-sm font-bold text-amber-800"></p>
+            </div>
+
+            <!-- Sharing & Retry -->
+            <div class="space-y-3">
+                <button onclick="shareToLINE()" class="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow flex items-center justify-center gap-2 transition">
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M24 10.304c0-5.369-5.383-9.738-12-9.738-6.616 0-12 4.369-12 9.738 0 4.814 4.269 8.846 10.036 9.608.391.084.922.258 1.057.592.121.303.079.778.039 1.085l-.171 1.027c-.053.303-.242 1.186 1.039.647 1.281-.54 6.911-4.069 9.428-6.967 1.739-1.907 2.572-3.844 2.572-6.002z"/></svg>
+                    <span>LINEで知人に送る</span>
+                </button>
+
+                <button onclick="copyURL()" class="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-xs transition border border-gray-300">
+                    URLをコピーする
+                </button>
+
+                <button onclick="startQuiz()" class="w-full py-3 bg-red-700 hover:bg-red-800 text-white font-bold rounded-xl shadow transition">
+                    もう一度挑戦する
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 text-xs text-gray-400">
+        大相撲ファンクイズ &copy; 2026
+    </footer>
+
+    <script>
+        const quizData = [
+            {
+                tag: "7月場所・幕内優勝",
+                question: "2026年7月（名古屋）場所で12勝3敗の成績を収め、通算3回目の幕内最高優勝を果たした力士は誰でしょう？",
+                options: [
+                    { text: "関脇 安青錦", isCorrect: true, rationale: "関脇・安青錦が12勝3敗の成績で見事3回目の幕内優勝を果たしました。" },
+                    { text: "横綱 大の里", isCorrect: false, rationale: "横綱・大の里は9勝6敗の成績でした。" },
+                    { text: "大関 霧島", isCorrect: false, rationale: "大関・霧島も12勝3敗と最後まで優勝を争いましたが優勝賜杯には届きませんでした。" },
+                    { text: "関脇 熱海富士", isCorrect: false, rationale: "関脇・熱海富士も12勝3敗と大健闘を見せました。" }
+                ]
+            },
+            {
+                tag: "7月場所・新記録",
+                question: "7月場所にて序ノ口デビューからの「4場所連続各段優勝」という昭和33年以降初の快挙を達成した伊勢ヶ濱部屋の力士は誰でしょう？",
+                options: [
+                    { text: "生田目", isCorrect: false, rationale: "生田目は連勝を止めるなど活躍しましたが、各段優勝の記録保持者ではありません。" },
+                    { text: "旭富士", isCorrect: true, rationale: "序ノ口、序二段、三段目に続き、7月場所で幕下優勝を果たし史上初の4場所連続各段優勝を達成しました。" },
+                    { text: "天昇山", isCorrect: false, rationale: "天昇山は三段目で優勝を果たした力士です。" },
+                    { text: "朝翠龍", isCorrect: false, rationale: "朝翠龍は十両で11勝4敗の好成績を収めた力士です。" }
+                ]
+            },
+            {
+                tag: "7月場所・スピード記録",
+                question: "7月場所の幕内全取組データにおいて、「短平均取組時間」1位（平均4.2秒）となった圧倒的出足を見せた力士は誰でしょう？",
+                options: [
+                    { text: "阿炎", isCorrect: false, rationale: "阿炎は短平均取組時間5.4秒で3位でした。" },
+                    { text: "尊富士", isCorrect: false, rationale: "尊富士は4.8秒で2位でした。" },
+                    { text: "大の里", isCorrect: true, rationale: "大の里が平均4.2秒のスピード決着で1位に輝きました。" },
+                    { text: "豊昇龍", isCorrect: false, rationale: "豊昇龍は今場所7勝7敗1休の成績でした。" }
+                ]
+            },
+            {
+                tag: "7月場所・懸賞金",
+                question: "7月場所（名古屋）で、14日目時点で懸賞金を最も多く獲得（292本・1752万円相当）した力士は誰でしょう？",
+                options: [
+                    { text: "大の里", isCorrect: true, rationale: "大の里が292本で獲得懸賞本数1位となりました。" },
+                    { text: "豊昇龍", isCorrect: false, rationale: "豊昇龍は243本で2位でした。" },
+                    { text: "熱海富士", isCorrect: false, rationale: "熱海富士は222本で3位でした。" },
+                    { text: "安青錦", isCorrect: false, rationale: "優勝した安青錦は207本獲得でした。" }
+                ]
+            },
+            {
+                tag: "7月場所・十両",
+                question: "2026年7月場所で十両優勝を果たした力士は誰でしょう？",
+                options: [
+                    { text: "湘南乃海", isCorrect: true, rationale: "湘南乃海が11勝4敗で十両優勝を果たし、幕内復帰を確実にしました。" },
+                    { text: "時疾風", isCorrect: false, rationale: "時疾風は10勝5敗の好成績でした。" },
+                    { text: "寿之富士", isCorrect: false, rationale: "寿之富士は11勝4敗で幕内昇進を確実としました。" },
+                    { text: "朝翠龍", isCorrect: false, rationale: "朝翠龍も11勝4敗の好成績を収めました。" }
+                ]
+            },
+            {
+                tag: "9月場所・新三役",
+                question: "2026年9月（秋）場所の予想番付で、初入幕からわずか7場所でのスピード「新三役昇進」が確実視されている力士は誰でしょう？",
+                options: [
+                    { text: "伯乃富士", isCorrect: false, rationale: "伯乃富士も新三役候補ですが、入幕からの所要場所が異なります。" },
+                    { text: "琴栄峰", isCorrect: false, rationale: "琴栄峰は前頭7枚目で11勝4敗を挙げ上位進出が見込まれています。" },
+                    { text: "藤ノ川", isCorrect: true, rationale: "入幕から所要7場所というスピード記録で新三役昇進が確実とされています。" },
+                    { text: "藤凌駕", isCorrect: false, rationale: "藤凌駕は10勝5敗で番付を大きく上げる見込みです。" }
+                ]
+            },
+            {
+                tag: "9月場所・新入幕",
+                question: "9月場所で十両からの「新入幕（幕内昇進）」が見込まれている若手力士の組み合わせとして正しいものはどれでしょう？",
+                options: [
+                    { text: "朝翠龍 と 寿之富士", isCorrect: true, rationale: "両者ともに十両上位で11勝4敗の好成績を挙げ、待望の新入幕が濃厚です。" },
+                    { text: "湘南乃海 と 時疾風", isCorrect: false, rationale: "両者は新入幕ではなく幕内への「再入幕」組となります。" },
+                    { text: "丹治 と 朝白龍", isCorrect: false, rationale: "丹治は新十両候補、朝白龍は幕内経験者です。" },
+                    { text: "欧勝馬 と 狼雅", isCorrect: false, rationale: "両者はすでに幕内に定着している力士です。" }
+                ]
+            },
+            {
+                tag: "9月場所・大関陣",
+                question: "9月場所の番付予想において、安青錦の大関昇進に伴い「大関」は何人在位となるでしょう？",
+                options: [
+                    { text: "2人", isCorrect: false, rationale: "霧島・琴櫻の2人に安青錦が加わります。" },
+                    { text: "3人", isCorrect: true, rationale: "霧島、琴櫻、そして新大関となる安青錦の「3大関」体制となります。" },
+                    { text: "4人", isCorrect: false, rationale: "大関は3人となります。" },
+                    { text: "1人", isCorrect: false, rationale: "大関は3人となります。" }
+                ]
+            },
+            {
+                tag: "9月場所・新十両",
+                question: "9月場所で幕下から勝ち越し、待望の関取入り（新十両昇進）を確実にした注目の若手力士は誰でしょう？",
+                options: [
+                    { text: "丹治", isCorrect: true, rationale: "東幕下筆頭で勝ち越しを決め、秋場所での新十両昇進を確実にしました。" },
+                    { text: "栃武蔵", isCorrect: false, rationale: "栃武蔵は十両復帰を目指す立場です。" },
+                    { text: "高安", isCorrect: false, rationale: "高安は幕内のベテラン力士です。" },
+                    { text: "正代", isCorrect: false, rationale: "正代は元大関の幕内力士です。" }
+                ]
+            },
+            {
+                tag: "9月場所・注目力士",
+                question: "7月場所で前頭7枚目ながら11勝4敗の好成績を挙げ、9月場所で自己最高位の更新が期待される力士は誰でしょう？",
+                options: [
+                    { text: "琴栄峰", isCorrect: true, rationale: "7月場所で11勝4敗と大活躍し、秋場所では上位・三役近辺への大幅な番付アップが予想されています。" },
+                    { text: "豪ノ山", isCorrect: false, rationale: "豪ノ山は7勝8敗でした。" },
+                    { text: "一山本", isCorrect: false, rationale: "一山本は6勝9敗でした。" },
+                    { text: "美ノ海", isCorrect: false, rationale: "美ノ海は7勝8敗でした。" }
+                ]
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            document.getElementById('start-card').classList.add('hidden');
+            document.getElementById('result-card').classList.add('hidden');
+            document.getElementById('quiz-card').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const q = quizData[currentQuestionIndex];
+            document.getElementById('question-number').innerText = `第 ${currentQuestionIndex + 1} 問 / ${quizData.length} 問`;
+            document.getElementById('question-tag').innerText = q.tag;
+            document.getElementById('question-text').innerText = q.question;
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            
+            document.getElementById('explanation-box').classList.add('hidden');
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-3 rounded-xl border-2 border-gray-200 hover:border-red-600 font-semibold text-xs md:text-sm transition duration-150 flex justify-between items-center bg-gray-50 active:bg-gray-100";
+                btn.innerHTML = `<span>${opt.text}</span>`;
+                btn.onclick = () => selectOption(idx);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectOption(selectedIndex) {
+            const q = quizData[currentQuestionIndex];
+            const selectedOpt = q.options[selectedIndex];
+            const container = document.getElementById('options-container');
+            const buttons = container.querySelectorAll('button');
+
+            // Find correct option text
+            const correctOpt = q.options.find(o => o.isCorrect);
+
+            // Disable all buttons and highlight
+            buttons.forEach((btn, idx) => {
+                btn.disabled = true;
+                if (q.options[idx].isCorrect) {
+                    btn.classList.remove('bg-gray-50', 'border-gray-200');
+                    btn.classList.add('bg-green-50', 'border-green-600', 'text-green-900');
+                } else if (idx === selectedIndex) {
+                    btn.classList.remove('bg-gray-50', 'border-gray-200');
+                    btn.classList.add('bg-red-50', 'border-red-500', 'text-red-900');
+                }
+            });
+
+            const expBox = document.getElementById('explanation-box');
+            const expResult = document.getElementById('explanation-result');
+            const correctText = document.getElementById('correct-answer-text');
+            const expText = document.getElementById('explanation-text');
+
+            correctText.innerText = correctOpt.text;
+
+            if (selectedOpt.isCorrect) {
+                score++;
+                expResult.innerText = "⭕ 正解！";
+                expResult.className = "font-bold text-base mb-1 text-green-600";
+                expBox.className = "mt-5 p-4 rounded-xl text-sm border bg-green-50 border-green-200";
+            } else {
+                expResult.innerText = "❌ 不正解…";
+                expResult.className = "font-bold text-base mb-1 text-red-600";
+                expBox.className = "mt-5 p-4 rounded-xl text-sm border bg-red-50 border-red-200";
+            }
+
+            expText.innerText = selectedOpt.rationale;
+            expBox.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizData.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('quiz-card').classList.add('hidden');
+            document.getElementById('result-card').classList.remove('hidden');
+            document.getElementById('score-text').innerText = score;
+
+            const rankText = document.getElementById('rank-text');
+            if (score === 10) {
+                rankText.innerText = "称号：令和の大横綱 🏆";
+            } else if (score >= 7) {
+                rankText.innerText = "称号：期待の三役力士 🥋";
+            } else if (score >= 4) {
+                rankText.innerText = "称号：幕内定着力士 🌾";
+            } else {
+                rankText.innerText = "称号：新弟子（修業中） 🎋";
+            }
+        }
+
+        function shareToLINE() {
+            const shareText = `【大相撲クイズ】7月場所総括＆9月場所注目力士クイズで ${score}/10 問正解しました！あなたも挑戦してみてね！`;
+            const currentURL = window.location.href;
+            const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(shareText + "\n" + currentURL)}`;
+            window.location.href = lineUrl;
+        }
+
+        function copyURL() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                alert("アプリのURLをコピーしました！LINEなどで貼り付けて共有してください。");
+            }).catch(() => {
+                alert("URLのコピーに失敗しました。アドレスバーのURLを直接コピーしてください。");
+            });
+        }
+    </script>
+</body>
+</html>
+```eof

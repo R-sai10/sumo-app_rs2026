@@ -1,0 +1,24 @@
+EN_TO_JP_RIKLISHI  
+
+
+"hoshoryu": "豊昇龍", "onosato": "大の里", "kotozakura": "琴櫻",
+  "kirishima": "霧島", "kotoshoho": "琴勝峰", "atamifuji": "熱海富士", "wakatakakage": "若隆景",
+  "aoniniki": "安青錦", "aonishiki": "安青錦", "yoshinofuji": "義ノ富士", "ouho": "王鵬",
+  "oho": "王鵬", "fujinokawa": "藤ノ川", "takanosho": "隆の勝", "gonoyama": "豪ノ山",
+  "churanoumi": "美ノ海", "hiradoumi": "平戸海", "hakunofuji": "伯乃富士", "daieisho": "大栄翔",
+  "ichiyamamoto": "一山本", "ura": "宇良", "osoma": "欧勝馬", "oshoma": "欧勝馬",
+  "shodai": "正代", "fujiseiun": "藤青雲", "kotoeiho": "琴栄峰", "takayasu": "高安",
+  "wakamotoharu": "若元春", "roga": "狼雅", "fujiryoga": "藤凌駕", "tobizaru": "翔猿",
+  "asanoyama": "朝乃山", "chiyoshoma": "千代翔馬", "wakanosho": "若ノ勝", "mitakeumi": "御嶽海",
+  "asahakuryu": "朝白龍", "abi": "阿炎", "nishikifuji": "錦富士", "takerufuji": "尊富士",
+  "kinbozan": "金峰山", "shishi": "獅司", "onokatsu": "阿武剋", "kazuma": "一意",
+  "daiseizan": "大青山", "asakoryu": "朝紅龍", "asasuiryu": "朝翠龍",
+  "asasuiryu": "朝翠龍", "kyokukaiyu": "旭海雄", "tokihayate": "時疾風", "sadanoumi": "佐田の海",
+  "ryuden": "竜電", "dewanoryu": "出羽ノ龍", "tomokaze": "友風", "toshinofuji": "寿之富士",
+  "kitanowaka": "北の若", "oshouumi": "欧勝海", "shonannoumi": "湘南乃海",
+  "kazekenou": "風賢央", "tamawashi": "玉鷲", "meisei": "明生", "midorifuji": "翠富士",
+  "hatsuyama": "羽出山", "shirokuma": "白熊", "nishinoryu": "西ノ龍", "hitoshi": "日翔志",
+  "tamashoho": "玉正鳳", "kagayaki": "輝", "enho": "炎鵬", "tohakuryu": "東白龍","tokifudou":"時不動",
+  "kayo": "嘉陽", "arashifuji": "嵐富士", "hakutakazan": "白鷹山", "tochitaikai": "栃大海",
+  "nishikigi": "錦木","nabatame":"生田目","tanji":"丹治","asahifuji":"旭富士","hyugamaru":"日向丸",
+  "daikisho":"大喜翔","tochikoudai":"栃幸大","ikarigata":"碇潟","ookaryu":"大花竜"
