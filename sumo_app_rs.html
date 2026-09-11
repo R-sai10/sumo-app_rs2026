@@ -960,7 +960,7 @@ async function renderTorikumi(day) {
             （<span id="record-west-${index}">0勝0敗</span><span id="status-west-${index}"></span>）
           </div>
           <span class="cell-sub-info">${westInfo.home}・${westInfo.heya}</span>
-          <span class="cell-h2h">${getHeadToHeadText(match.eastId, match.westId)}</span>
+          <span class="cell-h2h">${getHeadToHeadText(match.westId, match.eastId)}</span>
         </td>
       `;
       tbody.appendChild(tr);
