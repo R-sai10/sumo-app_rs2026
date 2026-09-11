@@ -354,8 +354,8 @@
     </p>
 
     <div class="basho-switch-container" style="margin-bottom: 15px;">
-      <button id="btn-basho-202607" class="basho-btn active" onclick="switchBasho('202607')">7月場所（名古屋）</button>
-      <button id="btn-basho-202609" class="basho-btn" onclick="switchBasho('202609')">9月場所（秋場所）</button>
+      <button id="btn-basho-202607" class="basho-btn" onclick="switchBasho('202607')">7月場所（名古屋）</button>
+　　　<button id="btn-basho-202609" class="basho-btn active" onclick="switchBasho('202609')">9月場所（秋場所）</button>
     </div>
 
     <div class="select-container">
@@ -369,7 +369,7 @@
     </div>
 
    <div class="action-bar">
-    <a id="banzuke-link" href="banzuke.html?basho=202607" target="_blank" class="banzuke-btn">
+    <a id="banzuke-link" href="banzuke.html?basho=202609" target="_blank" class="banzuke-btn">
       📜 番付表を見る
     </a>
     <button id="clear-btn" class="clear-btn-small">キャッシュリセット</button>
@@ -380,7 +380,7 @@
     <div id="torikumi-list"></div>
 
 <script>
-let CURRENT_BASHO = "202607";
+let CURRENT_BASHO = "202609";
 let currentDivision = "Makuuchi"; 
 
 const BASHO_CONFIG = {
