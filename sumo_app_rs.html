@@ -287,13 +287,28 @@
 .sansho-kanto  { background-color: #16a34a; border: 1px solid #14532d; } /* 敢闘賞：緑 */
 .sansho-gino   { background-color: #2563eb; border: 1px solid #1e3a8a; } /* 技能賞：青 */
 
+/* スマホで取組テーブルが画面をはみ出す場合、横スクロールできるようにする */
+#torikumi-list {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 画面幅が狭いスマホ向けに、文字やボタンを少し小さくする */
+@media (max-width: 600px) {
+  h1 { font-size: 26px; }
+  .cell-name { font-size: 24px; }
+  .cell-rank, .cell-sub-info { font-size: 13px; }
+  .torikumi-table th { font-size: 15px; padding: 10px 4px; }
+  .basho-btn, .tab-btn { font-size: 15px; padding: 8px 14px; margin: 0 3px; }
+  .cell-kimarite { font-size: 14px; }
+}
 
 </style>
 </head>
 <body>
 
     <h1 id="basho-title">令和八年 七月場所</h1>
-    <p id="basho-sub-info" style="color: #cbd5e1; font-size: 20px; margin-bottom: 15px;">
+    <p id="basho-sub-info" style="color: #113f77; font-size: 20px; margin-bottom: 15px;">
       会場：名古屋IGアリーナ（7月12日〜7月26日）
     </p>
 
