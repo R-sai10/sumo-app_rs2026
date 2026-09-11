@@ -32,25 +32,23 @@
 
   /* --- ボタン & ドロップダウン類 --- */
   .basho-btn {
-      background-color: #f93999;
-      color: #331731d5;
-      border: 2px solid #334155;
-      padding: 12px 24px;
-      font-size: 20px;
-      font-weight: bold;
-      border-radius: 6px;
-      cursor: pointer;
-      margin: 0 6px;
-      transition: all 0.2s;
-  }
+    background-color: #1e293b;
+    color: #94a3b8;
+    border: 2px solid #334155;
+    padding: 10px 20px;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    margin: 0 6px;
+}
 
-  .basho-btn.active {
-      background-color: #aac24de5;
-      color: #0f172a;
-      border-color: #333536;
-      box-shadow: 0 0 12px rgba(4, 14, 19, 0.4);
-  }
-
+.basho-btn.active {
+    background-color: #f0c24d;
+    color: #0f172a;
+    border-color: #f0c24d;
+    box-shadow: 0 0 12px rgba(240, 194, 77, 0.4);
+}
   .select-container {
       margin: 20px 0;
   }
@@ -334,9 +332,13 @@
         <button id="tab-juryo" class="tab-btn" onclick="switchDivision('Juryo')">十両</button>
     </div>
 
-    <div>
-        <button id="clear-btn" class="action-btn-clear">キャッシュリセット</button>
-    </div>
+   <div>
+    <button id="clear-btn" class="action-btn-clear">キャッシュリセット</button>
+    <a id="banzuke-link" href="banzuke.html?basho=202607" target="_blank"
+   class="action-btn-clear" style="text-decoration:none; display:inline-block; background-color:#f93999; color:#331731;">
+  📜 番付表を見る
+</a>
+</div>
     
     <h2 id="division-title" class="section-title">〈 幕内 〉</h2>
 
@@ -586,6 +588,11 @@ function formatRankJp(rawRank) {
   return title;
 }
 
+function compareRankKey(a, b) {
+  if (a[0] !== b[0]) return a[0] - b[0];
+  return a[1] - b[1];
+}
+
 // APIレスポンス変換関数（修正版）
 function convertSumoApiToTorikumiFormat(apiTorikumiList) {
   return apiTorikumiList.map(item => {
@@ -768,6 +775,7 @@ async function switchBasho(bashoCode) {
   if (!BASHO_CONFIG[bashoCode]) return;
   
   CURRENT_BASHO = bashoCode;
+  document.getElementById('banzuke-link')?.setAttribute('href', `banzuke.html?basho=${bashoCode}`);
   await fetchBashoAwards(bashoCode); // ← 追加
   
   document.getElementById('btn-basho-202607')?.classList.toggle('active', bashoCode === '202607');

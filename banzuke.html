@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>番付表</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&display=swap" rel="stylesheet">
+<style>
+  body { font-family: sans-serif; background-color:#0f172a; text-align:center; margin:0; padding-bottom:60px; }
+  h1 { color:#eaa016; text-shadow:2px 2px 4px rgba(0,0,0,0.8); margin-top:24px; font-size:32px; }
+  .back-link { color:#94a3b8; text-decoration:none; font-size:15px; }
+  .basho-btn {
+    background-color: #1e293b;
+    color: #94a3b8;
+    border: 2px solid #334155;
+    padding: 10px 20px;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    margin: 0 6px;
+}
+ .basho-btn.active {
+    background-color: #f0c24d;
+    color: #0f172a;
+    border-color: #f0c24d;
+    box-shadow: 0 0 12px rgba(240, 194, 77, 0.4);
+}
+  .division-tabs { display:flex; justify-content:center; gap:16px; margin:20px auto 14px auto; }
+  .tab-btn { background-color:#1e293b; color:#94a3b8; border:2px solid #334155; padding:10px 28px; font-size:20px; font-weight:bold; border-radius:6px; cursor:pointer; }
+  .tab-btn.active { background-color:#f0c24d; color:#0f172a; border-color:#f0c24d; }
+  #banzuke-list { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .banzuke-table { width:100%; max-width:900px; min-width:650px; margin:20px auto; border-collapse:collapse; background:#fff; font-family:sans-serif; }
+  .banzuke-table th { background-color:#891d31; color:#fff; padding:10px; font-size:16px; border:1px solid #1e293b; }
+  .banzuke-table td { border:1px solid #334155; padding:10px; vertical-align:middle; }
+  .rank-cell { width:16%; font-weight:bold; color:#334155; background:#f1f5f9; }
+  .name-cell { width:42%; }
+  .name-cell .shikona { font-family:'Yuji Syuku', serif; font-size:26px; font-weight:bold; color:#0f172a; }
+  .name-cell .sub { font-size:13px; color:#475569; display:block; margin-top:2px; }
+  tr.tier-yokozuna td  { background-color: #fef3c7; }
+  tr.tier-ozeki td     { background-color: #fee2e2; }
+  tr.tier-sekiwake td  { background-color: #dbeafe; }
+  tr.tier-komusubi td  { background-color: #dcfce7; }
+</style>
+</head>
+<body>
+  <h1 id="banzuke-title">番付表</h1>
+  <a class="back-link" href="sumo_app_rs.html">← 取組表に戻る</a>
+
+  <div style="margin:16px 0;">
+    <button id="btn-basho-202607" class="basho-btn" onclick="switchBanzukeBasho('202607')">7月場所（名古屋）</button>
+    <button id="btn-basho-202609" class="basho-btn" onclick="switchBanzukeBasho('202609')">9月場所（秋場所）</button>
+  </div>
+
+  <div class="division-tabs">
+    <button id="tab-makuuchi" class="tab-btn active" onclick="switchBanzukeDivision('Makuuchi')">幕内</button>
+    <button id="tab-juryo" class="tab-btn" onclick="switchBanzukeDivision('Juryo')">十両</button>
+  </div>
+
+  <div id="banzuke-list"></div>
+
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+let CURRENT_BASHO = urlParams.get('basho') || '202607';
+let currentDivision = 'Makuuchi';
+
+const BASHO_LABELS = {
+  "202607": "令和八年 七月場所",
+  "202609": "令和八年 九月場所"
+};
+
+// ↓↓↓ ここに、sumo_app_rs.html にある以下の4つをそのままコピーして貼り付けてください ↓↓↓
+// ・EN_TO_JP_RIKISHI（力士名の変換表）
+const EN_TO_JP_RIKISHI = {
+  "hoshoryu": "豊昇龍", "onosato": "大の里", "kotozakura": "琴櫻",
+  "kirishima": "霧島", "kotoshoho": "琴勝峰", "atamifuji": "熱海富士", "wakatakakage": "若隆景",
+  "aonishiki": "安青錦", "yoshinofuji": "義ノ富士", "oho": "王鵬","fujinokawa": "藤ノ川", 
+  "takanosho": "隆の勝", "gonoyama": "豪ノ山",
+  "churanoumi": "美ノ海", "hiradoumi": "平戸海", "hakunofuji": "伯乃富士", "daieisho": "大栄翔",
+  "ichiyamamoto": "一山本", "ura": "宇良", "oshoma": "欧勝馬",
+  "shodai": "正代", "fujiseiun": "藤青雲", "kotoeiho": "琴栄峰", "takayasu": "高安",
+  "wakamotoharu": "若元春", "roga": "狼雅", "fujiryoga": "藤凌駕", "tobizaru": "翔猿",
+  "asanoyama": "朝乃山", "chiyoshoma": "千代翔馬", "wakanosho": "若ノ勝", "mitakeumi": "御嶽海",
+  "asahakuryu": "朝白龍", "abi": "阿炎", "nishikifuji": "錦富士", "takerufuji": "尊富士",
+  "kinbozan": "金峰山", "shishi": "獅司", "onokatsu": "阿武剋", "kazuma": "一意",
+  "daiseizan": "大青山", "asakoryu": "朝紅龍", "asasuiryu": "朝翠龍",
+  "kyokukaiyu": "旭海雄", "tokihayate": "時疾風", "sadanoumi": "佐田の海",
+  "ryuden": "竜電", "dewanoryu": "出羽ノ龍", "tomokaze": "友風", "toshinofuji": "寿之富士",
+  "kitanowaka": "北の若", "oshoumi": "欧勝海", "shonannoumi": "湘南乃海",
+  "kazekenou": "風賢央", "tamawashi": "玉鷲", "meisei": "明生", "midorifuji": "翠富士",
+  "hatsuyama": "羽出山", "shirokuma": "白熊", "nishinoryu": "西ノ龍", "hitoshi": "日翔志",
+  "tamashoho": "玉正鳳", "kagayaki": "輝", "enho": "炎鵬", "tohakuryu": "東白龍","tokifudou":"時不動",
+  "kayo": "嘉陽", "arashifuji": "嵐富士", "hakutakazan": "白鷹山", "tochitaikai": "栃大海",
+  "nishikigi": "錦木","nabatame":"生田目","tanji":"丹治","asahifuji":"旭富士","himukamaru":"日向丸",
+  "daikisho":"大喜翔","tochikodai":"栃幸大","ikarigata":"碇潟","ookaryu":"大花竜","kazekeno":"風賢央",
+  "mudoho":"夢道鵬","ryuho":"竜鳳","gojinyu":"豪刃雄","daikosho":"大皇翔","fujitensei":"藤天晴","sazanami":"漣",
+  "akua":"天空海"
+};
+// ・normalizeName 関数
+function normalizeName(str) {
+  if (!str) return "";
+  return str.toString().trim().replace(/[\s-_]/g, '').toLowerCase();
+}
+// ・getRikishiData 関数
+function getRikishiData(nameOrEn) {
+  if (!nameOrEn) return { name: "不明", home: "-", heya: "-" };
+
+  // 1. そのまま漢字名で存在する場合
+  if (globalRikishiMaster[nameOrEn]) {
+    return {
+      name: nameOrEn,
+      home: globalRikishiMaster[nameOrEn].home || "-",
+      heya: globalRikishiMaster[nameOrEn].heya || "-"
+    };
+  }
+
+  // 2. 英語名を日本語名に変換して検索
+  const cleanEn = normalizeName(nameOrEn);
+  const jpName = EN_TO_JP_RIKISHI[cleanEn];
+
+  if (jpName && globalRikishiMaster[jpName]) {
+    return {
+      name: jpName,
+      home: globalRikishiMaster[jpName].home || "-",
+      heya: globalRikishiMaster[jpName].heya || "-"
+    };
+  }
+
+  // 3. 部分一致・正規化検索
+  for (const [jpKey, info] of Object.entries(globalRikishiMaster)) {
+    if (normalizeName(jpKey) === cleanEn || jpKey.includes(nameOrEn) || nameOrEn.includes(jpKey)) {
+      return {
+        name: jpKey,
+        home: info.home || "-",
+        heya: info.heya || "-"
+      };
+    }
+  }
+
+  return {
+    name: jpName || nameOrEn,
+    home: "-",
+    heya: "-"
+  };
+}
+// ・formatRankJp 関数（と、その中で使っている toKanjiNum 関数）
+
+function formatRankJp(rawRank) {
+  if (!rawRank) return "";
+
+  const rank = rawRank.toString().trim();
+
+  // 1. 三役（横綱・大関・関脇・小結）は、数字がどう付いていても
+  //    絶対に「一枚目」等を付けず、役職名のみを即座に返す
+  if (/Yokozuna|横綱/i.test(rank)) return "横綱";
+  if (/Ozeki|大関/i.test(rank)) return "大関";
+  if (/Sekiwake|関脇/i.test(rank)) return "関脇";
+  if (/Komusubi|小結/i.test(rank)) return "小結";
+
+  // 2. 階級名の判定（正式名 or 日本語 or 略記 "M1" "Ms12" など）
+  let title = "";
+  if (/Maegashira|前頭/i.test(rank)) title = "前頭";
+  else if (/Juryo|十両/i.test(rank)) title = "十両";
+  else if (/Makushita|幕下/i.test(rank)) title = "幕下";
+  else if (/Sandanme|三段目/i.test(rank)) title = "三段目";
+  else if (/Jonidan|序二段/i.test(rank)) title = "序二段";
+  else if (/Jonokuchi|序ノ口/i.test(rank)) title = "序ノ口";
+  else {
+    // "M1" "Ms12" "J3" のような略記に対応（Ms/Sd/Jd/Jkは2文字なので先にチェック）
+    const abbr = rank.match(/^(Ms|Sd|Jd|Jk|M|J)\s*\d+/i);
+    if (abbr) {
+      const map = { ms: "幕下", sd: "三段目", jd: "序二段", jk: "序ノ口", m: "前頭", j: "十両" };
+      title = map[abbr[1].toLowerCase()] || "";
+    }
+  }
+
+  if (!title) return rank; // どの階級とも判定できなければ元の文字列のまま返す
+
+  // 3. 数字（枚数）の抽出。半角数字がなければ「筆頭」の文字を探す
+  let num = null;
+  const numMatch = rank.match(/\d+/);
+  if (numMatch) {
+    num = parseInt(numMatch[0], 10);
+  } else if (/筆頭/.test(rank)) {
+    num = 1;
+  }
+
+  // 4. 表記の組み立て
+  if (num === 1) {
+    // 前頭・十両の1枚目だけ「筆頭」、幕下以下は「一枚目」
+    return (title === "前頭" || title === "十両") ? `${title}筆頭` : `${title}一枚目`;
+  }
+  if (num !== null && num > 1) {
+    return `${title}${toKanjiNum(num)}枚目`;
+  }
+  return title;
+}
+// 数字を漢数字に変換するヘルパー関数
+function toKanjiNum(numStr) {
+  if (!numStr) return "";
+  const num = parseInt(numStr, 10);
+  if (isNaN(num)) return numStr;
+
+  const kanji = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
+  if (num <= 10) return kanji[num];
+  if (num < 20) return "十" + (kanji[num % 10] || "");
+  const tens = Math.floor(num / 10);
+  const units = num % 10;
+  return (tens === 1 ? "" : kanji[tens]) + "十" + kanji[units];
+}
+const RANK_TITLE_ORDER = { yokozuna: 0, ozeki: 1, sekiwake: 2, komusubi: 3, maegashira: 4, juryo: 0 };
+
+function rankSortKey(rawRank) {
+  if (!rawRank) return [999, 999];
+  const rank = rawRank.toString();
+  let title = 'maegashira';
+  if (/Yokozuna/i.test(rank)) title = 'yokozuna';
+  else if (/Ozeki/i.test(rank)) title = 'ozeki';
+  else if (/Sekiwake/i.test(rank)) title = 'sekiwake';
+  else if (/Komusubi/i.test(rank)) title = 'komusubi';
+  else if (/Juryo/i.test(rank)) title = 'juryo';
+
+  const numMatch = rank.match(/\d+/);
+  const num = numMatch ? parseInt(numMatch[0], 10) : 1;
+  return [RANK_TITLE_ORDER[title] ?? 99, num];
+}
+function getRankTierClass(rawRank) {
+  if (!rawRank) return '';
+  const r = rawRank.toString();
+  if (/Yokozuna/i.test(r)) return 'tier-yokozuna';
+  if (/Ozeki/i.test(r)) return 'tier-ozeki';
+  if (/Sekiwake/i.test(r)) return 'tier-sekiwake';
+  if (/Komusubi/i.test(r)) return 'tier-komusubi';
+  return '';
+}
+function compareRankKey(a, b) {
+  if (a[0] !== b[0]) return a[0] - b[0];
+  return a[1] - b[1];
+}
+
+let globalRikishiMaster = {};
+let banzukeCache = {};
+
+async function fetchBanzuke(bashoCode, division) {
+  const cacheKey = `${bashoCode}_${division}`;
+  if (banzukeCache[cacheKey]) return banzukeCache[cacheKey];
+
+  const apiUrl = `https://sumo-api.com/api/basho/${bashoCode}/banzuke/${division}`;
+  try {
+    const response = await fetch(apiUrl);
+    if (!response.ok) return { east: [], west: [] };
+    const data = await response.json();
+    console.log("banzuke data:", data); // ← 確認用（あとで消してOK）
+    const east = data.east || [];
+    const west = data.west || [];
+    banzukeCache[cacheKey] = { east, west };
+    return { east, west };
+  } catch (e) {
+    console.warn("番付データの取得に失敗しました:", e);
+    return { east: [], west: [] };
+  }
+}
+
+function getEntryInfo(entry) {
+  if (!entry) return null;
+  const rawName = entry.shikonaEn || entry.shikonaJp || '';
+  const info = getRikishiData(rawName);
+  const rank = entry.rank || entry.rankValue || '';
+  return { name: info.name, home: info.home, heya: info.heya, rank };
+}
+
+async function renderBanzuke() {
+  document.getElementById('btn-basho-202607')?.classList.toggle('active', CURRENT_BASHO === '202607');
+  document.getElementById('btn-basho-202609')?.classList.toggle('active', CURRENT_BASHO === '202609');
+  document.getElementById('tab-makuuchi')?.classList.toggle('active', currentDivision === 'Makuuchi');
+  document.getElementById('tab-juryo')?.classList.toggle('active', currentDivision === 'Juryo');
+  document.getElementById('banzuke-title').textContent = `${BASHO_LABELS[CURRENT_BASHO] || CURRENT_BASHO} 番付表`;
+
+  const listContainer = document.getElementById('banzuke-list');
+  listContainer.innerHTML = '<div style="color:white; margin:30px;">読み込み中...</div>';
+
+  const { east, west } = await fetchBanzuke(CURRENT_BASHO, currentDivision);
+
+  if (east.length === 0 && west.length === 0) {
+    listContainer.innerHTML = '<div style="color:#cbd5e1; margin:30px;">この場所の番付データはまだありません。</div>';
+    return;
+  }
+
+    // 東西を「同じ番付同士」で組み合わせる
+  const rows = [];
+  let i = 0, j = 0;
+  while (i < east.length || j < west.length) {
+    const eEntry = east[i];
+    const wEntry = west[j];
+
+    if (eEntry && wEntry) {
+      const cmp = compareRankKey(
+        rankSortKey(eEntry.rank || eEntry.rankValue),
+        rankSortKey(wEntry.rank || wEntry.rankValue)
+      );
+      if (cmp === 0) {
+        rows.push({ east: eEntry, west: wEntry });
+        i++; j++;
+      } else if (cmp < 0) {
+        rows.push({ east: eEntry, west: null });
+        i++;
+      } else {
+        rows.push({ east: null, west: wEntry });
+        j++;
+      }
+    } else if (eEntry) {
+      rows.push({ east: eEntry, west: null });
+      i++;
+    } else if (wEntry) {
+      rows.push({ east: null, west: wEntry });
+      j++;
+    }
+  }
+
+  const table = document.createElement('table');
+  table.className = 'banzuke-table';
+  table.innerHTML = `<thead><tr><th>東</th><th>番付</th><th>西</th></tr></thead><tbody></tbody>`;
+  const tbody = table.querySelector('tbody');
+
+  rows.forEach(row => {
+    const e = getEntryInfo(row.east);
+    const w = getEntryInfo(row.west);
+    const rankLabel = formatRankJp((e && e.rank) || (w && w.rank) || '');
+    const tierClass = getRankTierClass((e && e.rank) || (w && w.rank) || ''); // ← 追加
+
+    const tr = document.createElement('tr');
+    tr.className = tierClass; // ← 追加
+    tr.innerHTML = `
+      <td class="name-cell">
+        ${e ? `<span class="shikona">${e.name}</span><span class="sub">${e.home}・${e.heya}</span>` : ''}
+      </td>
+      <td class="rank-cell">${rankLabel}</td>
+      <td class="name-cell">
+        ${w ? `<span class="shikona">${w.name}</span><span class="sub">${w.home}・${w.heya}</span>` : ''}
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  listContainer.innerHTML = '';
+  listContainer.appendChild(table);
+}
+
+function switchBanzukeBasho(bashoCode) {
+  CURRENT_BASHO = bashoCode;
+  renderBanzuke();
+}
+
+function switchBanzukeDivision(division) {
+  currentDivision = division;
+  renderBanzuke();
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const meiboRes = await fetch('meibo.json');
+    globalRikishiMaster = await meiboRes.json();
+  } catch (e) {
+    console.warn("meibo.json の読み込み失敗:", e);
+  }
+  await renderBanzuke();
+});
+</script>
+</body>
+</html>
