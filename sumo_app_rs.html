@@ -307,7 +307,43 @@
   .basho-btn, .tab-btn { font-size: 15px; padding: 8px 14px; margin: 0 3px; }
   .cell-kimarite { font-size: 14px; }
 }
+.action-bar {
+    position: relative;
+    width: 100%;
+    margin-bottom: 14px;
+    min-height: 40px;
+}
 
+.banzuke-btn {
+    display: inline-block;
+    background-color: #f93999;
+    color: #331731;
+    text-decoration: none;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 6px;
+}
+
+.clear-btn-small {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #475569;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    font-size: 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.clear-btn-small:hover {
+    background-color: #ef4444;
+    opacity: 1;
+}
 </style>
 </head>
 <body>
@@ -332,12 +368,11 @@
         <button id="tab-juryo" class="tab-btn" onclick="switchDivision('Juryo')">十両</button>
     </div>
 
-   <div>
-    <button id="clear-btn" class="action-btn-clear">キャッシュリセット</button>
-    <a id="banzuke-link" href="banzuke.html?basho=202607" target="_blank"
-   class="action-btn-clear" style="text-decoration:none; display:inline-block; background-color:#f93999; color:#331731;">
-  📜 番付表を見る
-</a>
+   <div class="action-bar">
+    <a id="banzuke-link" href="banzuke.html?basho=202607" target="_blank" class="banzuke-btn">
+      📜 番付表を見る
+    </a>
+    <button id="clear-btn" class="clear-btn-small">キャッシュリセット</button>
 </div>
     
     <h2 id="division-title" class="section-title">〈 幕内 〉</h2>
