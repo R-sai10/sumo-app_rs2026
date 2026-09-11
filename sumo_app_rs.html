@@ -222,6 +222,13 @@
       display: block;
       font-weight: 500;
   }
+  .cell-h2h {
+    font-size: 14px;
+    color: #7c2d12;
+    font-weight: 600;
+    display: block;
+    margin-top: 2px;
+}
 
   .cell-mark {
       width: 50px;
@@ -419,6 +426,56 @@ function getKimariteJp(englishKimarite) {
   if (!englishKimarite) return "-";
   const lower = englishKimarite.toLowerCase().trim();
   return KIMARITE_MAP[lower] || englishKimarite;
+}
+let headToHeadCache = {}; // 対戦成績のキャッシュ（力士ペアごと）20260911追加
+
+async function fetchHeadToHead(rikishiIdA, rikishiIdB) {
+  if (!rikishiIdA || !rikishiIdB) return { winsA: 0, winsB: 0 };
+
+  const key = `${Math.min(rikishiIdA, rikishiIdB)}_${Math.max(rikishiIdA, rikishiIdB)}`;
+  if (headToHeadCache[key]) return headToHeadCache[key];
+
+  const apiUrl = `https://sumo-api.com/api/rikishi/${rikishiIdA}/matches/${rikishiIdB}`;
+
+  try {
+    const response = await fetch(apiUrl);
+    if (!response.ok) {
+      const empty = { idA: rikishiIdA, idB: rikishiIdB, winsA: 0, winsB: 0 };
+      headToHeadCache[key] = empty;
+      return empty;
+    }
+    const data = await response.json();
+
+    console.log("対戦成績データ:", data); // ← 確認用（あとで消してOK）
+
+    const matchList = data.matches || data.Matches || [];
+    let winsA = 0, winsB = 0;
+    matchList.forEach(m => {
+      const winnerId = m.winnerId ?? m.winner_id;
+      if (winnerId === rikishiIdA) winsA++;
+      else if (winnerId === rikishiIdB) winsB++;
+    });
+
+    const result = { idA: rikishiIdA, idB: rikishiIdB, winsA, winsB };
+    headToHeadCache[key] = result;
+    return result;
+  } catch (e) {
+    console.warn("対戦成績の取得に失敗しました:", e);
+    const empty = { idA: rikishiIdA, idB: rikishiIdB, winsA: 0, winsB: 0 };
+    headToHeadCache[key] = empty;
+    return empty;
+  }
+}
+
+function getHeadToHeadText(myId, opponentId) {
+  if (!myId || !opponentId) return '';
+  const key = `${Math.min(myId, opponentId)}_${Math.max(myId, opponentId)}`;
+  const rec = headToHeadCache[key];
+  if (!rec) return '';
+  const myWins = (rec.idA === myId) ? rec.winsA : rec.winsB;
+  const oppWins = (rec.idA === myId) ? rec.winsB : rec.winsA;
+  if (myWins + oppWins === 0) return '';
+  return `対戦成績: ${myWins}勝${oppWins}敗`;
 }
 
 // 力士マスター情報（名前・出身地・部屋）を取得する関数
@@ -786,6 +843,7 @@ async function renderTorikumi(day) {
         </div>`;
       return;
     }
+    await Promise.all(matches.map(m => fetchHeadToHead(m.eastId, m.westId)));
 
     const table = document.createElement('table');
     table.className = 'torikumi-table';
@@ -831,9 +889,11 @@ async function renderTorikumi(day) {
             （<span id="record-east-${index}">0勝0敗</span><span id="status-east-${index}"></span>）
           </div>
           <span class="cell-sub-info">${eastInfo.home}・${eastInfo.heya}</span>
-        </td>
-
-        <!-- 東 勝敗マーク -->
+          <span class="cell-h2h">${getHeadToHeadText(match.eastId, match.westId)}</span>
+         </td>
+          
+          
+       <!-- 東 勝敗マーク -->
         <td class="cell-mark ${isEastWin ? 'win-mark' : 'lose-mark'}">
           ${eastMarkChar}
         </td>
@@ -857,6 +917,7 @@ async function renderTorikumi(day) {
             （<span id="record-west-${index}">0勝0敗</span><span id="status-west-${index}"></span>）
           </div>
           <span class="cell-sub-info">${westInfo.home}・${westInfo.heya}</span>
+          <span class="cell-h2h">${getHeadToHeadText(match.eastId, match.westId)}</span>
         </td>
       `;
       tbody.appendChild(tr);
