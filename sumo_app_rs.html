@@ -799,6 +799,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   await switchBasho(CURRENT_BASHO);
 
   const daySelect = document.getElementById('day-select');
+  // 自動更新設定：5分（300000ミリ秒）ごとに、今見ている日のデータを取り直す
+const AUTO_REFRESH_MINUTES = 5;
+
+setInterval(async () => {
+  const daySelect = document.getElementById('day-select');
+  const currentDay = daySelect ? daySelect.value : 1;
+  const cacheKey = `${CURRENT_BASHO}_${currentDivision}_${currentDay}`;
+
+  // 今表示している日のキャッシュだけを消す（他の日はそのまま）
+  delete torikumiCache[cacheKey];
+
+  await renderTorikumi(currentDay);
+}, AUTO_REFRESH_MINUTES * 60 * 1000);
   if (daySelect) {
     daySelect.addEventListener('change', async (event) => {
       await renderTorikumi(event.target.value);
