@@ -501,15 +501,9 @@ async function fetchHeadToHead(rikishiIdA, rikishiIdB) {
     }
     const data = await response.json();
 
-    console.log("対戦成績データ:", data); // ← 確認用（あとで消してOK）
-
-    const matchList = data.matches || data.Matches || [];
-    let winsA = 0, winsB = 0;
-    matchList.forEach(m => {
-      const winnerId = m.winnerId ?? m.winner_id;
-      if (winnerId === rikishiIdA) winsA++;
-      else if (winnerId === rikishiIdB) winsB++;
-    });
+    // APIが既に集計済みの勝敗数を返してくれるので、そのまま使う
+    const winsA = data.rikishiWins ?? 0;
+    const winsB = data.opponentWins ?? 0;
 
     const result = { idA: rikishiIdA, idB: rikishiIdB, winsA, winsB };
     headToHeadCache[key] = result;
@@ -530,7 +524,7 @@ function getHeadToHeadText(myId, opponentId) {
   const myWins = (rec.idA === myId) ? rec.winsA : rec.winsB;
   const oppWins = (rec.idA === myId) ? rec.winsB : rec.winsA;
   if (myWins + oppWins === 0) return '';
-  return `対戦成績: ${myWins}勝${oppWins}敗`;
+  return `通算対戦成績: ${myWins}勝${oppWins}敗`;
 }
 
 // 力士マスター情報（名前・出身地・部屋）を取得する関数
@@ -917,7 +911,8 @@ async function renderTorikumi(day) {
         </div>`;
       return;
     }
-    await Promise.all(matches.map(m => fetchHeadToHead(m.eastId, m.westId)));
+    
+await Promise.all(matches.map(m => fetchHeadToHead(m.eastId, m.westId)));
 
     const table = document.createElement('table');
     table.className = 'torikumi-table';
