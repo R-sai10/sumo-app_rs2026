@@ -388,6 +388,7 @@ const BASHO_CONFIG = {
   "202607": {
     title: "令和八年 七月場所",
     subInfo: "会場：名古屋IGアリーナ（7月12日〜7月26日）",
+    startDate: "2026-07-12", // ← 追加
     days: Array.from({length: 15}, (_, i) => ({
       value: i + 1,
       label: i === 0 ? "初日（7月12日）" : i === 7 ? "中日（7月19日）" : i === 14 ? "千秋楽（7月26日）" : `${i + 1}日目（7月${12 + i}日）`
@@ -396,12 +397,27 @@ const BASHO_CONFIG = {
   "202609": {
     title: "令和八年 九月場所",
     subInfo: "会場：両国国技館（9月13日〜9月27日）",
+    startDate: "2026-09-13", // ← 追加
     days: Array.from({length: 15}, (_, i) => ({
       value: i + 1,
       label: i === 0 ? "初日（9月13日）" : i === 7 ? "中日（9月20日）" : i === 14 ? "千秋楽（9月27日）" : `${i + 1}日目（9月${13 + i}日）`
     }))
   }
 };
+function getDefaultDay(bashoCode) {
+  const config = BASHO_CONFIG[bashoCode];
+  if (!config || !config.startDate) return 1;
+
+  const start = new Date(config.startDate + "T00:00:00");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.floor((today - start) / (1000 * 60 * 60 * 24)) + 1;
+
+  if (diffDays < 1) return 1;   // 場所が始まる前 → 初日を表示
+  if (diffDays > 15) return 15; // 場所が終わった後 → 千秋楽を表示
+  return diffDays;              // 開催期間中 → 今日の日にち
+}
 
 const EN_TO_JP_RIKISHI = {
   "hoshoryu": "豊昇龍", "onosato": "大の里", "kotozakura": "琴櫻",
@@ -847,7 +863,7 @@ async function switchBasho(bashoCode) {
       opt.textContent = d.label;
       daySelect.appendChild(opt);
     });
-    daySelect.value = bashoCode === "202607" ? 15 : 1;
+    daySelect.value = getDefaultDay(bashoCode);
   }
 
   await renderTorikumi(daySelect ? daySelect.value : 1);
