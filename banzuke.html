@@ -82,6 +82,16 @@ tr.tier-komusubi td  { background-color: #dcfce7; }
     display: block;
     margin-top: 2px;
 }
+.kyujo-mark {
+    display: inline-block;
+    font-size: 13px;
+    color: #ffffff;
+    background-color: #64748b;
+    padding: 1px 7px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
 
 /* スマホ向けにさらにコンパクトに */
 @media (max-width: 400px) {
@@ -145,6 +155,15 @@ const EN_TO_JP_RIKISHI = {
   "mudoho":"夢道鵬","ryuho":"竜鳳","gojinyu":"豪刃雄","daikosho":"大皇翔","fujitensei":"藤天晴","sazanami":"漣",
   "akua":"天空海"
 };
+// 場所ごとの休場力士リスト（EN_TO_JP_RIKISHI のキー名と同じ表記で入力）
+const KYUJO_RIKISHI = {
+  "202609": ["hoshoryu", "wakatakakage", "wakanosho", "oshoumi"]
+};
+
+function isKyujo(rawEnName) {
+  const list = KYUJO_RIKISHI[CURRENT_BASHO] || [];
+  return list.includes(normalizeName(rawEnName));
+}
 // ・normalizeName 関数
 function normalizeName(str) {
   if (!str) return "";
@@ -315,7 +334,8 @@ function getEntryInfo(entry) {
   const rawName = entry.shikonaEn || entry.shikonaJp || '';
   const info = getRikishiData(rawName);
   const rank = entry.rank || entry.rankValue || '';
-  return { name: info.name, home: info.home, heya: info.heya, rank };
+  const kyujo = isKyujo(rawName); // ← 追加
+  return { name: info.name, home: info.home, heya: info.heya, rank, kyujo };
 }
 
 async function renderBanzuke() {
@@ -379,13 +399,13 @@ async function renderBanzuke() {
 
     const tr = document.createElement('tr');
     tr.className = tierClass; // ← 追加
-    tr.innerHTML = `
+        tr.innerHTML = `
       <td class="name-cell">
-        ${e ? `<span class="shikona">${e.name}</span><span class="sub">${e.home}・${e.heya}</span>` : ''}
+        ${e ? `<span class="shikona">${e.name}${e.kyujo ? '<span class="kyujo-mark">休</span>' : ''}</span><span class="sub">${e.home}・${e.heya}</span>` : ''}
       </td>
       <td class="rank-cell">${rankLabel}</td>
       <td class="name-cell">
-        ${w ? `<span class="shikona">${w.name}</span><span class="sub">${w.home}・${w.heya}</span>` : ''}
+        ${w ? `<span class="shikona">${w.name}${w.kyujo ? '<span class="kyujo-mark">休</span>' : ''}</span><span class="sub">${w.home}・${w.heya}</span>` : ''}
       </td>
     `;
     tbody.appendChild(tr);
