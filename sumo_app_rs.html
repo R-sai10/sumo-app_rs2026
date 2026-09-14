@@ -524,7 +524,7 @@ function getHeadToHeadText(myId, opponentId) {
   const myWins = (rec.idA === myId) ? rec.winsA : rec.winsB;
   const oppWins = (rec.idA === myId) ? rec.winsB : rec.winsA;
   if (myWins + oppWins === 0) return '';
-  return `通算対戦成績: ${myWins}勝${oppWins}敗`;
+  return `対戦成績: ${myWins}勝${oppWins}敗`;
 }
 
 // 力士マスター情報（名前・出身地・部屋）を取得する関数
@@ -991,6 +991,10 @@ await Promise.all(matches.map(m => fetchHeadToHead(m.eastId, m.westId)));
       `;
       tbody.appendChild(tr);
     });
+    const noteDiv = document.createElement('div');
+    noteDiv.textContent = '※対戦成績は通算';
+    noteDiv.style.cssText = 'max-width:1000px; margin:0 auto 4px auto; text-align:left; font-size:12px; color:#334155; padding-left:6px;';
+    listContainer.appendChild(noteDiv);
 
     listContainer.appendChild(table);
     calculateTotalRecords(parseInt(day));
