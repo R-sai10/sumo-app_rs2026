@@ -89,7 +89,27 @@
       border-color: #f0c24d;
       box-shadow: 0 0 12px rgba(240, 194, 77, 0.4);
   }
+.flip-btn-small {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #1e293b;
+    color: #94a3b8;
+    border: 2px solid #334155;
+    padding: 10px 22px;
+    font-size: 15px;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+}
 
+.flip-btn-small.active {
+    background-color: #f0c24d;
+    color: #0f172a;
+    border-color: #f0c24d;
+    box-shadow: 0 0 12px rgba(240, 194, 77, 0.4);
+}
   .action-btn-clear {
       background-color: #475569;
       color: white;
@@ -107,16 +127,24 @@
       opacity: 1;
   }
 
-  .section-title { 
-      background-color: #1b0528ea; 
-      color: white; 
-      width: 180px; 
-      margin: 28px auto 20px auto; 
-      padding: 8px 16px; 
-      border-radius: 4px; 
-      font-size: 26px; 
-      letter-spacing: 4px; 
-  }
+ .section-title { 
+    background-color: #1b0528ea; 
+    color: white; 
+    width: 180px; 
+    margin: 0 auto; 
+    padding: 8px 16px; 
+    border-radius: 4px; 
+    font-size: 26px; 
+    letter-spacing: 4px; 
+}
+.division-title-row {
+    position: relative;
+    width: 100%;
+    max-width: 1000px;
+    margin: 28px auto 20px auto;
+    text-align: center;
+}
+
 
   /* --- 勝敗バッジ --- */
   .kachikoshi-mark {
@@ -366,9 +394,10 @@
     </div>
 
     <div class="division-tabs">
-        <button id="tab-makuuchi" class="tab-btn active" onclick="switchDivision('Makuuchi')">幕内</button>
-        <button id="tab-juryo" class="tab-btn" onclick="switchDivision('Juryo')">十両</button>
-    </div>
+    <button id="tab-makuuchi" class="tab-btn active" onclick="switchDivision('Makuuchi')">幕内</button>
+    <button id="tab-juryo" class="tab-btn" onclick="switchDivision('Juryo')">十両</button>
+</div>
+    
 
    <div class="action-bar">
     <a id="banzuke-link" href="banzuke.html?basho=202609" target="_blank" class="banzuke-btn">
@@ -377,13 +406,24 @@
     <button id="clear-btn" class="clear-btn-small">キャッシュリセット</button>
 </div>
     
+    <div class="division-title-row">
     <h2 id="division-title" class="section-title">〈 幕内 〉</h2>
+   <button id="flip-btn" class="flip-btn-small" onclick="toggleFlip()">↔️ 東西反転</button>
+</div>
 
     <div id="torikumi-list"></div>
 
 <script>
 let CURRENT_BASHO = "202609";
 let currentDivision = "Makuuchi"; 
+let isFlipped = false;
+
+function toggleFlip() {
+  isFlipped = !isFlipped;
+  document.getElementById('flip-btn')?.classList.toggle('active', isFlipped);
+  const daySelect = document.getElementById('day-select');
+  renderTorikumi(daySelect ? daySelect.value : 1);
+}
 
 const BASHO_CONFIG = {
   "202607": {
@@ -921,9 +961,9 @@ await Promise.all(matches.map(m => fetchHeadToHead(m.eastId, m.westId)));
     table.innerHTML = `
       <thead>
         <tr>
-          <th colspan="2">東</th>
+          <th colspan="2">${isFlipped ? '西' : '東'}</th>
           <th>決まり手</th>
-          <th colspan="2">西</th>
+          <th colspan="2">${isFlipped ? '東' : '西'}</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -931,12 +971,12 @@ await Promise.all(matches.map(m => fetchHeadToHead(m.eastId, m.westId)));
 
     const tbody = table.querySelector('tbody');
 
-    matches.forEach((match, index) => {
+        matches.forEach((match, index) => {
       const eastInfo = getRikishiData(match.eastRaw || match.east);
       const westInfo = getRikishiData(match.westRaw || match.west);
 
       const displayEastBanzuke = match.eastRank;
-　　　const displayWestBanzuke = match.westRank;
+      const displayWestBanzuke = match.westRank;
 
       match.east = eastInfo.name;
       match.west = westInfo.name;
@@ -947,25 +987,44 @@ await Promise.all(matches.map(m => fetchHeadToHead(m.eastId, m.westId)));
       const eastMarkChar = isEastWin ? '〇' : (match.eastResult === '●' ? '●' : '');
       const westMarkChar = isWestWin ? '〇' : (match.westResult === '●' ? '●' : '');
 
-            const tr = document.createElement('tr');
-            
+      // ここから：反転設定にもとづいて「左側」「右側」を決める
+      const leftData = {
+        info: isFlipped ? westInfo : eastInfo,
+        rank: isFlipped ? displayWestBanzuke : displayEastBanzuke,
+        isWin: isFlipped ? isWestWin : isEastWin,
+        markChar: isFlipped ? westMarkChar : eastMarkChar,
+        id: isFlipped ? match.westId : match.eastId,
+        raw: isFlipped ? match.westRaw : match.eastRaw,
+        side: isFlipped ? 'west' : 'east'
+      };
+      const rightData = {
+        info: isFlipped ? eastInfo : westInfo,
+        rank: isFlipped ? displayEastBanzuke : displayWestBanzuke,
+        isWin: isFlipped ? isEastWin : isWestWin,
+        markChar: isFlipped ? eastMarkChar : westMarkChar,
+        id: isFlipped ? match.eastId : match.westId,
+        raw: isFlipped ? match.eastRaw : match.westRaw,
+        side: isFlipped ? 'east' : 'west'
+      };
+      // ここまで追加
+
+      const tr = document.createElement('tr');
       tr.innerHTML = `
-        <!-- 東 力士情報 -->
-        <td class="cell-rikishi ${isEastWin ? 'winner-bg' : ''}">
-          <span class="cell-rank">${displayEastBanzuke}</span>
-          <span class="cell-name" id="name-east-${index}">${eastInfo.name}</span>
-          <div class="cell-award-marks">${buildAwardMarksHtml(match.eastId, match.eastRaw, day)}</div>
+        <!-- 左側 -->
+        <td class="cell-rikishi ${leftData.isWin ? 'winner-bg' : ''}">
+          <span class="cell-rank">${leftData.rank}</span>
+          <span class="cell-name" id="name-${leftData.side}-${index}">${leftData.info.name}</span>
+          <div class="cell-award-marks">${buildAwardMarksHtml(leftData.id, leftData.raw, day)}</div>
           <div class="cell-record">
-            （<span id="record-east-${index}">0勝0敗</span><span id="status-east-${index}"></span>）
+            （<span id="record-${leftData.side}-${index}">0勝0敗</span><span id="status-${leftData.side}-${index}"></span>）
           </div>
-          <span class="cell-sub-info">${eastInfo.home}・${eastInfo.heya}</span>
-          <span class="cell-h2h">${getHeadToHeadText(match.eastId, match.westId)}</span>
-         </td>
-          
-          
-       <!-- 東 勝敗マーク -->
-        <td class="cell-mark ${isEastWin ? 'win-mark' : 'lose-mark'}">
-          ${eastMarkChar}
+          <span class="cell-sub-info">${leftData.info.home}・${leftData.info.heya}</span>
+          <span class="cell-h2h">${getHeadToHeadText(leftData.id, rightData.id)}</span>
+        </td>
+
+        <!-- 左側 勝敗マーク -->
+        <td class="cell-mark ${leftData.isWin ? 'win-mark' : 'lose-mark'}">
+          ${leftData.markChar}
         </td>
 
         <!-- 決まり手 -->
@@ -973,21 +1032,21 @@ await Promise.all(matches.map(m => fetchHeadToHead(m.eastId, m.westId)));
           ${match.kimarite || '-'}
         </td>
 
-        <!-- 西 勝敗マーク -->
-        <td class="cell-mark ${isWestWin ? 'win-mark' : 'lose-mark'}">
-          ${westMarkChar}
+        <!-- 右側 勝敗マーク -->
+        <td class="cell-mark ${rightData.isWin ? 'win-mark' : 'lose-mark'}">
+          ${rightData.markChar}
         </td>
 
-        <!-- 西 力士情報 -->
-        <td class="cell-rikishi ${isWestWin ? 'winner-bg' : ''}">
-          <span class="cell-rank">${displayWestBanzuke}</span>
-          <span class="cell-name" id="name-west-${index}">${westInfo.name}</span>
-          <div class="cell-award-marks">${buildAwardMarksHtml(match.westId, match.westRaw, day)}</div>
+        <!-- 右側 -->
+        <td class="cell-rikishi ${rightData.isWin ? 'winner-bg' : ''}">
+          <span class="cell-rank">${rightData.rank}</span>
+          <span class="cell-name" id="name-${rightData.side}-${index}">${rightData.info.name}</span>
+          <div class="cell-award-marks">${buildAwardMarksHtml(rightData.id, rightData.raw, day)}</div>
           <div class="cell-record">
-            （<span id="record-west-${index}">0勝0敗</span><span id="status-west-${index}"></span>）
+            （<span id="record-${rightData.side}-${index}">0勝0敗</span><span id="status-${rightData.side}-${index}"></span>）
           </div>
-          <span class="cell-sub-info">${westInfo.home}・${westInfo.heya}</span>
-          <span class="cell-h2h">${getHeadToHeadText(match.westId, match.eastId)}</span>
+          <span class="cell-sub-info">${rightData.info.home}・${rightData.info.heya}</span>
+          <span class="cell-h2h">${getHeadToHeadText(rightData.id, leftData.id)}</span>
         </td>
       `;
       tbody.appendChild(tr);
