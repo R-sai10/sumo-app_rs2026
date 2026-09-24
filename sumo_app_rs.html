@@ -889,6 +889,7 @@ async function renderTorikumi(day) {
     for (let d = 1; d <= parseInt(day); d++) {
       fetchPromises.push(fetchDayTorikumi("Makuuchi", d));
       fetchPromises.push(fetchDayTorikumi("Juryo", d));
+      fetchPromises.push(fetchDayTorikumi("Makushita", d)); 
     }
     await Promise.all(fetchPromises);
 
@@ -1022,7 +1023,7 @@ function calculateTotalRecords(targetDay) {
   const rikishiStats = {};
 
   for (let d = 1; d <= targetDay; d++) {
-    const divisions = ["Makuuchi", "Juryo"];
+    const divisions = ["Makuuchi", "Juryo","Makushita"];
     
     divisions.forEach(div => {
       const cacheKey = `${CURRENT_BASHO}_${div}_${d}`;
