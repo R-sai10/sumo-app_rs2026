@@ -92,7 +92,35 @@ tr.tier-komusubi td  { background-color: #dcfce7; }
     margin-left: 6px;
     vertical-align: middle;
 }
+.cell-record {
+    font-size: 15px;
+    color: #1e3a8a;
+    font-weight: bold;
+    margin-top: 4px;
+    display: block;
+}
 
+.kachikoshi-mark {
+    font-size: 12px;
+    color: #ef4444;
+    font-weight: bold;
+    background-color: #fee2e2;
+    padding: 1px 5px;
+    border-radius: 3px;
+    border: 1px solid #fca5a5;
+    margin-left: 4px;
+}
+
+.makekoshi-mark {
+    font-size: 12px;
+    color: #4b5563;
+    font-weight: bold;
+    background-color: #f3f4f6;
+    padding: 1px 5px;
+    border-radius: 3px;
+    border: 1px solid #d1d5db;
+    margin-left: 4px;
+}
 /* スマホ向けにさらにコンパクトに */
 @media (max-width: 400px) {
     .banzuke-table th { font-size: 13px; padding: 6px 2px; }
@@ -157,7 +185,7 @@ const EN_TO_JP_RIKISHI = {
 };
 // 場所ごとの休場力士リスト（EN_TO_JP_RIKISHI のキー名と同じ表記で入力）
 const KYUJO_RIKISHI = {
-  "202609": ["hoshoryu", "wakatakakage", "wakanosho", "oshoumi","kotoshoho"]
+  "202609": ["hoshoryu", "wakatakakage", "wakanosho", "oshoumi","kotoshoho", "takanosho"]
 };
 
 function isKyujo(rawEnName) {
@@ -328,14 +356,95 @@ async function fetchBanzuke(bashoCode, division) {
     return { east: [], west: [] };
   }
 }
+let torikumiRecordCache = {};
+let rikishiRecords = {};
+let recordsBuiltBasho = null;
+
+async function fetchDayResultsForRecord(division, day) {
+  const cacheKey = `${CURRENT_BASHO}_${division}_${day}`;
+  if (torikumiRecordCache[cacheKey]) return torikumiRecordCache[cacheKey];
+
+  const apiUrl = `https://sumo-api.com/api/basho/${CURRENT_BASHO}/torikumi/${division}/${day}`;
+  try {
+    const response = await fetch(apiUrl);
+    if (!response.ok) { torikumiRecordCache[cacheKey] = []; return []; }
+    const data = await response.json();
+    if (!data || !Array.isArray(data.torikumi)) { torikumiRecordCache[cacheKey] = []; return []; }
+
+    const list = data.torikumi.map(item => {
+      const isEastWinner = item.winnerId && item.winnerId === item.eastId;
+      const isWestWinner = item.winnerId && item.winnerId === item.westId;
+      const eastInfo = getRikishiData(item.eastShikona);
+      const westInfo = getRikishiData(item.westShikona);
+      return {
+        east: eastInfo.name,
+        west: westInfo.name,
+        eastResult: isEastWinner ? '〇' : (isWestWinner ? '●' : ''),
+        westResult: isWestWinner ? '〇' : (isEastWinner ? '●' : '')
+      };
+    });
+    torikumiRecordCache[cacheKey] = list;
+    return list;
+  } catch (e) {
+    console.warn(`${division} ${day}日目の集計用データ取得失敗:`, e);
+    torikumiRecordCache[cacheKey] = [];
+    return [];
+  }
+}
+
+async function buildRikishiRecordsIfNeeded(bashoCode) {
+  if (recordsBuiltBasho === bashoCode) return;
+
+  rikishiRecords = {};
+  const divisions = ["Makuuchi", "Juryo", "Makushita"];
+  const fetchPromises = [];
+  for (let d = 1; d <= 15; d++) {
+    divisions.forEach(div => fetchPromises.push(fetchDayResultsForRecord(div, d)));
+  }
+  await Promise.all(fetchPromises);
+
+  for (let d = 1; d <= 15; d++) {
+    divisions.forEach(div => {
+      const cacheKey = `${bashoCode}_${div}_${d}`;
+      const dayMatches = torikumiRecordCache[cacheKey] || [];
+      dayMatches.forEach(m => {
+        if (m.east) {
+          if (!rikishiRecords[m.east]) rikishiRecords[m.east] = { wins: 0, losses: 0 };
+          if (m.eastResult === '〇') rikishiRecords[m.east].wins++;
+          if (m.eastResult === '●') rikishiRecords[m.east].losses++;
+        }
+        if (m.west) {
+          if (!rikishiRecords[m.west]) rikishiRecords[m.west] = { wins: 0, losses: 0 };
+          if (m.westResult === '〇') rikishiRecords[m.west].wins++;
+          if (m.westResult === '●') rikishiRecords[m.west].losses++;
+        }
+      });
+    });
+  }
+  recordsBuiltBasho = bashoCode;
+}
+
+function getRecordHtml(name, kyujo) {
+  if (kyujo) return '－';
+  const rec = rikishiRecords[name] || { wins: 0, losses: 0 };
+  const total = rec.wins + rec.losses;
+  if (total === 0) return '－';
+
+  let badge = '';
+  if (rec.wins >= 8) badge = '<span class="kachikoshi-mark">勝ち越し</span>';
+  else if (rec.losses >= 8) badge = '<span class="makekoshi-mark">負け越し</span>';
+
+  return `（${rec.wins}勝${rec.losses}敗）${badge}`;
+}
 
 function getEntryInfo(entry) {
   if (!entry) return null;
   const rawName = entry.shikonaEn || entry.shikonaJp || '';
   const info = getRikishiData(rawName);
   const rank = entry.rank || entry.rankValue || '';
-  const kyujo = isKyujo(rawName); // ← 追加
-  return { name: info.name, home: info.home, heya: info.heya, rank, kyujo };
+  const kyujo = isKyujo(rawName);
+  const recordHtml = getRecordHtml(info.name, kyujo);
+  return { name: info.name, home: info.home, heya: info.heya, rank, kyujo, recordHtml };
 }
 
 async function renderBanzuke() {
@@ -347,7 +456,7 @@ async function renderBanzuke() {
 
   const listContainer = document.getElementById('banzuke-list');
   listContainer.innerHTML = '<div style="color:white; margin:30px;">読み込み中...</div>';
-
+  await buildRikishiRecordsIfNeeded(CURRENT_BASHO); // ← 追加
   const { east, west } = await fetchBanzuke(CURRENT_BASHO, currentDivision);
 
   if (east.length === 0 && west.length === 0) {
@@ -399,13 +508,13 @@ async function renderBanzuke() {
 
     const tr = document.createElement('tr');
     tr.className = tierClass; // ← 追加
-        tr.innerHTML = `
+            tr.innerHTML = `
       <td class="name-cell">
-        ${e ? `<span class="shikona">${e.name}${e.kyujo ? '<span class="kyujo-mark">休</span>' : ''}</span><span class="sub">${e.home}・${e.heya}</span>` : ''}
+        ${e ? `<span class="shikona">${e.name}${e.kyujo ? '<span class="kyujo-mark">休</span>' : ''}</span><span class="sub">${e.home}・${e.heya}</span><span class="cell-record">${e.recordHtml}</span>` : ''}
       </td>
       <td class="rank-cell">${rankLabel}</td>
       <td class="name-cell">
-        ${w ? `<span class="shikona">${w.name}${w.kyujo ? '<span class="kyujo-mark">休</span>' : ''}</span><span class="sub">${w.home}・${w.heya}</span>` : ''}
+        ${w ? `<span class="shikona">${w.name}${w.kyujo ? '<span class="kyujo-mark">休</span>' : ''}</span><span class="sub">${w.home}・${w.heya}</span><span class="cell-record">${w.recordHtml}</span>` : ''}
       </td>
     `;
     tbody.appendChild(tr);
