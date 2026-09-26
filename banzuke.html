@@ -122,11 +122,18 @@ tr.tier-komusubi td  { background-color: #dcfce7; }
     margin-left: 4px;
 }
 /* スマホ向けにさらにコンパクトに */
-@media (max-width: 400px) {
+@media (max-width: 600px) {
     .banzuke-table th { font-size: 13px; padding: 6px 2px; }
     .rank-cell { font-size: 12px; }
     .name-cell .shikona { font-size: 16px; }
     .name-cell .sub { font-size: 9px; }
+    .cell-record { font-size: 12px; }
+    .kachikoshi-mark, .makekoshi-mark {
+        display: block;
+        margin-left: 0;
+        margin-top: 2px;
+        width: fit-content;
+    }
 }
 </style>
 </head>
