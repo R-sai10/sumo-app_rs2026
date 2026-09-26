@@ -100,27 +100,7 @@ tr.tier-komusubi td  { background-color: #dcfce7; }
     display: block;
 }
 
-.kachikoshi-mark {
-    font-size: 12px;
-    color: #ef4444;
-    font-weight: bold;
-    background-color: #fee2e2;
-    padding: 1px 5px;
-    border-radius: 3px;
-    border: 1px solid #fca5a5;
-    margin-left: 4px;
-}
 
-.makekoshi-mark {
-    font-size: 12px;
-    color: #4b5563;
-    font-weight: bold;
-    background-color: #f3f4f6;
-    padding: 1px 5px;
-    border-radius: 3px;
-    border: 1px solid #d1d5db;
-    margin-left: 4px;
-}
 /* スマホ向けにさらにコンパクトに */
 @media (max-width: 600px) {
     .banzuke-table th { font-size: 13px; padding: 6px 2px; }
@@ -128,12 +108,7 @@ tr.tier-komusubi td  { background-color: #dcfce7; }
     .name-cell .shikona { font-size: 16px; }
     .name-cell .sub { font-size: 9px; }
     .cell-record { font-size: 12px; }
-    .kachikoshi-mark, .makekoshi-mark {
-        display: block;
-        margin-left: 0;
-        margin-top: 2px;
-        width: fit-content;
-    }
+    
 }
 </style>
 </head>
@@ -432,16 +407,17 @@ async function buildRikishiRecordsIfNeeded(bashoCode) {
 }
 
 function getRecordHtml(name, kyujo) {
-  if (kyujo) return '－';
   const rec = rikishiRecords[name] || { wins: 0, losses: 0 };
   const total = rec.wins + rec.losses;
+
+  if (kyujo) {
+    if (total === 0) return '－'; // 初日から全休の力士
+    const restDays = Math.max(0, 15 - total);
+    return `（${rec.wins}勝${rec.losses}敗${restDays}休）`;
+  }
+
   if (total === 0) return '－';
-
-  let badge = '';
-  if (rec.wins >= 8) badge = '<span class="kachikoshi-mark">勝ち越し</span>';
-  else if (rec.losses >= 8) badge = '<span class="makekoshi-mark">負け越し</span>';
-
-  return `（${rec.wins}勝${rec.losses}敗）${badge}`;
+  return `（${rec.wins}勝${rec.losses}敗）`;
 }
 
 function getEntryInfo(entry) {
