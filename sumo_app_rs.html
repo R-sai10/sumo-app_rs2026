@@ -62,6 +62,10 @@
       color: #0f172a;
       font-weight: bold;
       cursor: pointer;
+      width: 260px;
+      max-width: 90%;
+      text-align: center;
+      text-align-last: center;
   }
 
   .division-tabs {
@@ -384,12 +388,10 @@
     </p>
 
     <div class="basho-switch-container" style="margin-bottom: 15px;">
-      <button id="btn-basho-202607" class="basho-btn" onclick="switchBasho('202607')">7月場所（名古屋）</button>
-　　　<button id="btn-basho-202609" class="basho-btn active" onclick="switchBasho('202609')">9月場所（秋場所）</button>
-    </div>
+  <select id="basho-select" class="day-select-dropdown" onchange="switchBasho(this.value)"></select>
+</div>
 
     <div class="select-container">
-        <label for="day-select" style="color: white; font-weight: bold; margin-right: 8px;">取組日：</label>
         <select id="day-select" class="day-select-dropdown"></select>
     </div>
 
@@ -414,7 +416,7 @@
     <div id="torikumi-list"></div>
 
 <script>
-let CURRENT_BASHO = "202609";
+let CURRENT_BASHO = "202611";
 let currentDivision = "Makuuchi"; 
 let isFlipped = false;
 
@@ -425,26 +427,44 @@ function toggleFlip() {
   renderTorikumi(daySelect ? daySelect.value : 1);
 }
 
+// 開始日から「初日・〇日目・中日・千秋楽」の表示を自動で作る
+function buildBashoDays(startDateStr) {
+  const [y, m, d] = startDateStr.split('-').map(Number);
+  return Array.from({length: 15}, (_, i) => {
+    const date = new Date(y, m - 1, d + i);
+    const md = `${date.getMonth() + 1}月${date.getDate()}日`;
+    const label = i === 0 ? `初日（${md}）`
+                : i === 7 ? `中日（${md}）`
+                : i === 14 ? `千秋楽（${md}）`
+                : `${i + 1}日目（${md}）`;
+    return { value: i + 1, label };
+  });
+}
+
 const BASHO_CONFIG = {
   "202607": {
     title: "令和八年 七月場所",
+    selectLabel: "7月場所（名古屋）",
     subInfo: "会場：名古屋IGアリーナ（7月12日〜7月26日）",
-    startDate: "2026-07-12", // ← 追加
-    days: Array.from({length: 15}, (_, i) => ({
-      value: i + 1,
-      label: i === 0 ? "初日（7月12日）" : i === 7 ? "中日（7月19日）" : i === 14 ? "千秋楽（7月26日）" : `${i + 1}日目（7月${12 + i}日）`
-    }))
+    startDate: "2026-07-12"
   },
   "202609": {
     title: "令和八年 九月場所",
+    selectLabel: "9月場所（秋場所）",
     subInfo: "会場：両国国技館（9月13日〜9月27日）",
-    startDate: "2026-09-13", // ← 追加
-    days: Array.from({length: 15}, (_, i) => ({
-      value: i + 1,
-      label: i === 0 ? "初日（9月13日）" : i === 7 ? "中日（9月20日）" : i === 14 ? "千秋楽（9月27日）" : `${i + 1}日目（9月${13 + i}日）`
-    }))
+    startDate: "2026-09-13"
+  },
+  "202611": {
+    title: "令和八年 十一月場所",
+    selectLabel: "11月場所（九州）",
+    subInfo: "会場：福岡国際センター（11月8日〜11月22日）",
+    startDate: "2026-11-08"
   }
 };
+
+// 各場所の days（日にちの選択肢）を自動で作る
+Object.values(BASHO_CONFIG).forEach(c => { c.days = buildBashoDays(c.startDate); });
+
 function getDefaultDay(bashoCode) {
   const config = BASHO_CONFIG[bashoCode];
   if (!config || !config.startDate) return 1;
@@ -459,32 +479,20 @@ function getDefaultDay(bashoCode) {
   if (diffDays > 15) return 15; // 場所が終わった後 → 千秋楽を表示
   return diffDays;              // 開催期間中 → 今日の日にち
 }
+function initBashoSelect() {
+  const select = document.getElementById('basho-select');
+  if (!select) return;
+  select.innerHTML = '';
+  Object.keys(BASHO_CONFIG).sort().reverse().forEach(code => {
+    const opt = document.createElement('option');
+    opt.value = code;
+    opt.textContent = BASHO_CONFIG[code].selectLabel;
+    select.appendChild(opt);
+  });
+  select.value = CURRENT_BASHO;
+}
 
-const EN_TO_JP_RIKISHI = {
-  "hoshoryu": "豊昇龍", "onosato": "大の里", "kotozakura": "琴櫻",
-  "kirishima": "霧島", "kotoshoho": "琴勝峰", "atamifuji": "熱海富士", "wakatakakage": "若隆景",
-  "aonishiki": "安青錦", "yoshinofuji": "義ノ富士", "oho": "王鵬","fujinokawa": "藤ノ川", 
-  "takanosho": "隆の勝", "gonoyama": "豪ノ山",
-  "churanoumi": "美ノ海", "hiradoumi": "平戸海", "hakunofuji": "伯乃富士", "daieisho": "大栄翔",
-  "ichiyamamoto": "一山本", "ura": "宇良", "oshoma": "欧勝馬",
-  "shodai": "正代", "fujiseiun": "藤青雲", "kotoeiho": "琴栄峰", "takayasu": "高安",
-  "wakamotoharu": "若元春", "roga": "狼雅", "fujiryoga": "藤凌駕", "tobizaru": "翔猿",
-  "asanoyama": "朝乃山", "chiyoshoma": "千代翔馬", "wakanosho": "若ノ勝", "mitakeumi": "御嶽海",
-  "asahakuryu": "朝白龍", "abi": "阿炎", "nishikifuji": "錦富士", "takerufuji": "尊富士",
-  "kinbozan": "金峰山", "shishi": "獅司", "onokatsu": "阿武剋", "kazuma": "一意",
-  "daiseizan": "大青山", "asakoryu": "朝紅龍", "asasuiryu": "朝翠龍",
-  "kyokukaiyu": "旭海雄", "tokihayate": "時疾風", "sadanoumi": "佐田の海",
-  "ryuden": "竜電", "dewanoryu": "出羽ノ龍", "tomokaze": "友風", "toshinofuji": "寿之富士",
-  "kitanowaka": "北の若", "oshoumi": "欧勝海", "shonannoumi": "湘南乃海",
-  "kazekenou": "風賢央", "tamawashi": "玉鷲", "meisei": "明生", "midorifuji": "翠富士",
-  "hatsuyama": "羽出山", "shirokuma": "白熊", "nishinoryu": "西ノ龍", "hitoshi": "日翔志",
-  "tamashoho": "玉正鳳", "kagayaki": "輝", "enho": "炎鵬", "tohakuryu": "東白龍","tokifudo":"時不動",
-  "kayo": "嘉陽", "arashifuji": "嵐富士", "hakutakazan": "白鷹山", "tochitaikai": "栃大海",
-  "nishikigi": "錦木","nabatame":"生田目","tanji":"丹治","asahifuji":"旭富士","himukamaru":"日向丸",
-  "daikisho":"大喜翔","tochikodai":"栃幸大","ikarigata":"碇潟","okaryu":"大花竜","kazekeno":"風賢央",
-  "mudoho":"夢道鵬","ryuho":"竜鳳","gojinyu":"豪刃雄","daikosho":"大皇翔","fujitensei":"藤天晴","sazanami":"漣",
-  "akua":"天空海"
-};
+let EN_TO_JP_RIKISHI = {};
 
 const KIMARITE_MAP = {
   "yorikiri": "寄り切り", "oshidashi": "押し出し", "hatakikomi": "叩き込み", "tsukidashi": "突き出し",
@@ -516,7 +524,17 @@ function normalizeName(str) {
   if (!str) return "";
   return str.toString().trim().replace(/[\s-_]/g, '').toLowerCase();
 }
-
+function buildEnToJpMap() {
+  EN_TO_JP_RIKISHI = {};
+  for (const [jpName, info] of Object.entries(globalRikishiMaster)) {
+    if (info.en) EN_TO_JP_RIKISHI[normalizeName(info.en)] = jpName;
+    if (Array.isArray(info.en_alt)) {
+      info.en_alt.forEach(alt => {
+        EN_TO_JP_RIKISHI[normalizeName(alt)] = jpName;
+      });
+    }
+  }
+}
 function getKimariteJp(englishKimarite) {
   if (!englishKimarite) return "-";
   const lower = englishKimarite.toLowerCase().trim();
@@ -844,10 +862,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const meiboRes = await fetch('meibo.json');
     globalRikishiMaster = await meiboRes.json();
+　　buildEnToJpMap(); // ← 追加
+
   } catch (e) {
     console.warn("meibo.json の読み込み失敗:", e);
   }
-
+  initBashoSelect(); // ← 追加
   await switchBasho(CURRENT_BASHO);
 
   const daySelect = document.getElementById('day-select');
@@ -873,13 +893,13 @@ setInterval(async () => {
 
 async function switchBasho(bashoCode) {
   if (!BASHO_CONFIG[bashoCode]) return;
-  
+
   CURRENT_BASHO = bashoCode;
   document.getElementById('banzuke-link')?.setAttribute('href', `banzuke.html?basho=${bashoCode}`);
-  await fetchBashoAwards(bashoCode); // ← 追加
-  
-  document.getElementById('btn-basho-202607')?.classList.toggle('active', bashoCode === '202607');
-  document.getElementById('btn-basho-202609')?.classList.toggle('active', bashoCode === '202609');
+  await fetchBashoAwards(bashoCode);
+
+  const bashoSelect = document.getElementById('basho-select');
+  if (bashoSelect) bashoSelect.value = bashoCode;
 
   const config = BASHO_CONFIG[bashoCode];
   if (document.getElementById('basho-title')) {

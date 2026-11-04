@@ -99,7 +99,16 @@ tr.tier-komusubi td  { background-color: #dcfce7; }
     margin-top: 4px;
     display: block;
 }
-
+.basho-select {
+    font-size: 18px;
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: 2px solid #f0c24d;
+    background-color: #fef3c7;
+    color: #0f172a;
+    font-weight: bold;
+    cursor: pointer;
+}
 
 /* スマホ向けにさらにコンパクトに */
 @media (max-width: 600px) {
@@ -116,10 +125,9 @@ tr.tier-komusubi td  { background-color: #dcfce7; }
   <h1 id="banzuke-title">番付表</h1>
   <a class="back-link" href="sumo_app_rs.html">← 取組表に戻る</a>
 
-  <div style="margin:16px 0;">
-    <button id="btn-basho-202607" class="basho-btn" onclick="switchBanzukeBasho('202607')">7月場所（名古屋）</button>
-    <button id="btn-basho-202609" class="basho-btn" onclick="switchBanzukeBasho('202609')">9月場所（秋場所）</button>
-  </div>
+ <div style="margin:16px 0;">
+  <select id="basho-select" class="basho-select" onchange="switchBanzukeBasho(this.value)"></select>
+</div>
 
   <div class="division-tabs">
     <button id="tab-makuuchi" class="tab-btn active" onclick="switchBanzukeDivision('Makuuchi')">幕内</button>
@@ -130,41 +138,37 @@ tr.tier-komusubi td  { background-color: #dcfce7; }
 
 <script>
 const urlParams = new URLSearchParams(window.location.search);
-let CURRENT_BASHO = urlParams.get('basho') || '202609';
+let CURRENT_BASHO = urlParams.get('basho') || '202611';
 let currentDivision = 'Makuuchi';
 
 const BASHO_LABELS = {
   "202607": "令和八年 七月場所",
-  "202609": "令和八年 九月場所"
+  "202609": "令和八年 九月場所",
+  "202611": "令和八年 十一月場所"
 };
 
-// ↓↓↓ ここに、sumo_app_rs.html にある以下の4つをそのままコピーして貼り付けてください ↓↓↓
-// ・EN_TO_JP_RIKISHI（力士名の変換表）
-const EN_TO_JP_RIKISHI = {
-  "hoshoryu": "豊昇龍", "onosato": "大の里", "kotozakura": "琴櫻",
-  "kirishima": "霧島", "kotoshoho": "琴勝峰", "atamifuji": "熱海富士", "wakatakakage": "若隆景",
-  "aonishiki": "安青錦", "yoshinofuji": "義ノ富士", "oho": "王鵬","fujinokawa": "藤ノ川", 
-  "takanosho": "隆の勝", "gonoyama": "豪ノ山",
-  "churanoumi": "美ノ海", "hiradoumi": "平戸海", "hakunofuji": "伯乃富士", "daieisho": "大栄翔",
-  "ichiyamamoto": "一山本", "ura": "宇良", "oshoma": "欧勝馬",
-  "shodai": "正代", "fujiseiun": "藤青雲", "kotoeiho": "琴栄峰", "takayasu": "高安",
-  "wakamotoharu": "若元春", "roga": "狼雅", "fujiryoga": "藤凌駕", "tobizaru": "翔猿",
-  "asanoyama": "朝乃山", "chiyoshoma": "千代翔馬", "wakanosho": "若ノ勝", "mitakeumi": "御嶽海",
-  "asahakuryu": "朝白龍", "abi": "阿炎", "nishikifuji": "錦富士", "takerufuji": "尊富士",
-  "kinbozan": "金峰山", "shishi": "獅司", "onokatsu": "阿武剋", "kazuma": "一意",
-  "daiseizan": "大青山", "asakoryu": "朝紅龍", "asasuiryu": "朝翠龍",
-  "kyokukaiyu": "旭海雄", "tokihayate": "時疾風", "sadanoumi": "佐田の海",
-  "ryuden": "竜電", "dewanoryu": "出羽ノ龍", "tomokaze": "友風", "toshinofuji": "寿之富士",
-  "kitanowaka": "北の若", "oshoumi": "欧勝海", "shonannoumi": "湘南乃海",
-  "kazekenou": "風賢央", "tamawashi": "玉鷲", "meisei": "明生", "midorifuji": "翠富士",
-  "hatsuyama": "羽出山", "shirokuma": "白熊", "nishinoryu": "西ノ龍", "hitoshi": "日翔志",
-  "tamashoho": "玉正鳳", "kagayaki": "輝", "enho": "炎鵬", "tohakuryu": "東白龍","tokifudou":"時不動",
-  "kayo": "嘉陽", "arashifuji": "嵐富士", "hakutakazan": "白鷹山", "tochitaikai": "栃大海","tokifudo":"時不動",
-  "nishikigi": "錦木","nabatame":"生田目","tanji":"丹治","asahifuji":"旭富士","himukamaru":"日向丸",
-  "daikisho":"大喜翔","tochikodai":"栃幸大","ikarigata":"碇潟","ookaryu":"大花竜","kazekeno":"風賢央",
-  "mudoho":"夢道鵬","ryuho":"竜鳳","gojinyu":"豪刃雄","daikosho":"大皇翔","fujitensei":"藤天晴","sazanami":"漣",
-  "akua":"天空海"
+const BASHO_SELECT_LABELS = {
+  "202607": "7月場所（名古屋）",
+  "202609": "9月場所（秋場所）",
+  "202611": "11月場所（九州）"
 };
+
+function initBashoSelect() {
+  const select = document.getElementById('basho-select');
+  if (!select) return;
+  select.innerHTML = '';
+  Object.keys(BASHO_SELECT_LABELS).sort().reverse().forEach(code => {
+    const opt = document.createElement('option');
+    opt.value = code;
+    opt.textContent = BASHO_SELECT_LABELS[code];
+    select.appendChild(opt);
+  });
+  select.value = CURRENT_BASHO;
+}
+
+let EN_TO_JP_RIKISHI = {};
+
+
 // 場所ごとの休場力士リスト（EN_TO_JP_RIKISHI のキー名と同じ表記で入力）
 const KYUJO_RIKISHI = {
   "202609": ["hoshoryu", "wakatakakage", "wakanosho", "oshoumi","kotoshoho", "takanosho"]
@@ -179,6 +183,19 @@ function normalizeName(str) {
   if (!str) return "";
   return str.toString().trim().replace(/[\s-_]/g, '').toLowerCase();
 }
+
+function buildEnToJpMap() {
+  EN_TO_JP_RIKISHI = {};
+  for (const [jpName, info] of Object.entries(globalRikishiMaster)) {
+    if (info.en) EN_TO_JP_RIKISHI[normalizeName(info.en)] = jpName;
+    if (Array.isArray(info.en_alt)) {
+      info.en_alt.forEach(alt => {
+        EN_TO_JP_RIKISHI[normalizeName(alt)] = jpName;
+      });
+    }
+  }
+}
+
 // ・getRikishiData 関数
 function getRikishiData(nameOrEn) {
   if (!nameOrEn) return { name: "不明", home: "-", heya: "-" };
@@ -431,8 +448,6 @@ function getEntryInfo(entry) {
 }
 
 async function renderBanzuke() {
-  document.getElementById('btn-basho-202607')?.classList.toggle('active', CURRENT_BASHO === '202607');
-  document.getElementById('btn-basho-202609')?.classList.toggle('active', CURRENT_BASHO === '202609');
   document.getElementById('tab-makuuchi')?.classList.toggle('active', currentDivision === 'Makuuchi');
   document.getElementById('tab-juryo')?.classList.toggle('active', currentDivision === 'Juryo');
   document.getElementById('banzuke-title').textContent = `${BASHO_LABELS[CURRENT_BASHO] || CURRENT_BASHO} 番付表`;
@@ -521,9 +536,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const meiboRes = await fetch('meibo.json');
     globalRikishiMaster = await meiboRes.json();
+    buildEnToJpMap(); // ← 追加
   } catch (e) {
     console.warn("meibo.json の読み込み失敗:", e);
   }
+  initBashoSelect(); // ← 追加
   await renderBanzuke();
 });
 </script>
