@@ -171,7 +171,8 @@ let EN_TO_JP_RIKISHI = {};
 
 // 場所ごとの休場力士リスト（EN_TO_JP_RIKISHI のキー名と同じ表記で入力）
 const KYUJO_RIKISHI = {
-  "202609": ["hoshoryu", "wakatakakage", "wakanosho", "oshoumi","kotoshoho", "takanosho"]
+  "202609": ["hoshoryu", "wakatakakage", "wakanosho", "oshoumi","kotoshoho", "takanosho"],
+  "202611": ["kotoeiho","hitoshi","shirokuma"]
 };
 
 function isKyujo(rawEnName) {
@@ -358,6 +359,8 @@ async function fetchBanzuke(bashoCode, division) {
 let torikumiRecordCache = {};
 let rikishiRecords = {};
 let recordsBuiltBasho = null;
+let daysHeldByDiv = { Makuuchi: 0, Juryo: 0 }; // 階級ごとの「取組が全部終わった最後の日」
+let rikishiFoughtDays = {};                     // 力士ごとの「取組があった日」の記録
 
 async function fetchDayResultsForRecord(division, day) {
   const cacheKey = `${CURRENT_BASHO}_${division}_${day}`;
@@ -402,6 +405,7 @@ async function buildRikishiRecordsIfNeeded(bashoCode) {
   }
   await Promise.all(fetchPromises);
 
+  // 勝敗を集計する
   for (let d = 1; d <= 15; d++) {
     divisions.forEach(div => {
       const cacheKey = `${bashoCode}_${div}_${d}`;
@@ -420,6 +424,33 @@ async function buildRikishiRecordsIfNeeded(bashoCode) {
       });
     });
   }
+
+  // 階級ごとに「その日の取組が全部終わった最後の日」を調べる
+  daysHeldByDiv = { Makuuchi: 0, Juryo: 0 };
+  ["Makuuchi", "Juryo"].forEach(div => {
+    for (let d = 15; d >= 1; d--) {
+      const list = torikumiRecordCache[`${bashoCode}_${div}_${d}`] || [];
+      const finished = list.length > 0 && list.every(m => m.eastResult !== '' || m.westResult !== '');
+      if (finished) { daysHeldByDiv[div] = d; break; }
+    }
+  });
+
+  // 力士ごとに「どの日に取組があったか」を記録する
+  rikishiFoughtDays = {};
+  for (let d = 1; d <= 15; d++) {
+    divisions.forEach(div => {
+      const dayMatches = torikumiRecordCache[`${bashoCode}_${div}_${d}`] || [];
+      dayMatches.forEach(m => {
+        if (m.east && m.eastResult !== '') {
+          (rikishiFoughtDays[m.east] = rikishiFoughtDays[m.east] || new Set()).add(d);
+        }
+        if (m.west && m.westResult !== '') {
+          (rikishiFoughtDays[m.west] = rikishiFoughtDays[m.west] || new Set()).add(d);
+        }
+      });
+    });
+  }
+
   recordsBuiltBasho = bashoCode;
 }
 
@@ -427,14 +458,19 @@ function getRecordHtml(name, kyujo) {
   const rec = rikishiRecords[name] || { wins: 0, losses: 0 };
   const total = rec.wins + rec.losses;
 
-  if (kyujo) {
-    if (total === 0) return '－'; // 初日から全休の力士
-    const restDays = Math.max(0, 15 - total);
-    return `（${rec.wins}勝${rec.losses}敗${restDays}休）`;
+  if (total === 0) return '－'; // まだ1番も取っていない力士（初日から休場など）
+
+  // 取組が全部終わった日のうち、この力士の取組がなかった日を数える
+  const held = daysHeldByDiv[currentDivision] || 0;
+  const fought = rikishiFoughtDays[name] || new Set();
+  let restDays = 0;
+  for (let d = 1; d <= held; d++) {
+    if (!fought.has(d)) restDays++;
   }
 
-  if (total === 0) return '－';
-  return `（${rec.wins}勝${rec.losses}敗）`;
+  return restDays > 0
+    ? `（${rec.wins}勝${rec.losses}敗${restDays}休）`
+    : `（${rec.wins}勝${rec.losses}敗）`;
 }
 
 function getEntryInfo(entry) {
